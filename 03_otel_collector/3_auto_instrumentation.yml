@@ -1,4 +1,6 @@
 # kubectl -n otel-col-ns get instrumentation.opentelemetry.io
+# kubectl -n otel-col-ns get instrumentation
+# kubectl -n otel-col-ns get instrumentations
 
 ---
 apiVersion: opentelemetry.io/v1alpha1
@@ -33,8 +35,8 @@ spec:
     - name: OTEL_EXPORTER_OTLP_TIMEOUT
       value: "300"
 
-    - name: OTEL_EXPORTER_JAEGER_ENDPOINT
-      value: "http://jaeger-service.otel-col-ns.svc.cluster.local:4318"
+    # - name: OTEL_EXPORTER_JAEGER_ENDPOINT
+    #   value: "http://jaeger-service.otel-col-ns.svc.cluster.local:4318"
 
     - name: OTEL_TRACES_SAMPLER
       value: parentbased_traceidratio
