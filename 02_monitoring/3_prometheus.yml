@@ -1,0 +1,222 @@
+# kubectl -n monitoring-ns expose svc spp-otel-gateway-collector-monitoring --name=spp-otel-gateway-collector-monitoring-exporter --port=8889 --target-port=8889
+# REFERENCE: https://github.com/techiescamp/kubernetes-prometheus
+
+--- 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name:  prometheus-cluster-role
+  namespace: monitoring-ns
+  annotations: 
+    kubecfg.ksonnet.io/garbage-collect-tag: kube_prod_runtime
+  labels:
+    kubecfg.ksonnet.io/garbage-collect-tag: kube_prod_runtime
+    app: prometheus-cr
+    application.owner: spp.com
+    version: v1 
+rules:
+  - apiGroups:
+      - "" 
+    resources:
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - services 
+      - endpoints 
+      - pods 
+      - ingresses
+      - configmaps
+    verbs:
+      - get 
+      - list 
+      - watch
+  - apiGroups: 
+      - extensions 
+      - networking.k8s.io 
+    resources:
+      - ingresses 
+      - ingresses/status 
+    verbs:
+      - get 
+      - list 
+      - watch 
+  - nonResourceURLs:
+      - /metrics 
+    verbs: 
+      - get 
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding 
+metadata:
+  name:  prometheus-cluster-rb
+  namespace: monitoring-ns
+  labels:
+    app: prometheus-crb
+    application.owner: spp.com
+    version: v1 
+roleRef: 
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole 
+  name: prometheus-cluster-role
+subjects:
+  - kind: ServiceAccount 
+    name: spp-otel-gateway-col-sa
+    namespace: monitoring-ns 
+
+---
+apiVersion: v1 
+kind: ConfigMap 
+metadata:
+  name:  prometheus-cm
+  namespace: monitoring-ns
+  labels:
+    app: prometheus-cm
+    application.owner: spp.com
+    version: v1
+data: 
+  prometheus.yml: |
+    global:
+      # How frequently to scrape targets by default
+      scrape_interval: 15s # By default , scrape target every 15 seconds      
+
+      # Attach these labels to any time series or alerts when communication with external systems
+      # Like federation, remote storage, AlertManager
+      external_labels:
+        monitor: consumer_log
+
+    # A scrape configuration containing exactly one end point to scrape
+    # Here it's Prometheus itself
+    scrape_configs:
+      # The Job Name is added as label 'job=<job_name>' to any time series scraped from this Config
+      - job_name: 'prometheus'
+        metrics_path: '/metrics'
+        # Override the global default and scrape targets for this job every 5 seconds
+        scrape_interval: 5s
+        static_configs:
+          - targets : ['localhost:9090'] # Prometheus Server Port
+
+      # Details to connect prometheus with Spring Boot Actuator end-point to scrap the data
+      # The Job Name is added as a label 'job=<job_name>' to any time series scraped from this Config
+      - job_name: 'otel-collector-receiver-8888'
+        # How frequently to scrap the data from this End-Point
+        scrape_interval: 5s
+        # Opentelemetry Collector Metrics Path
+        metrics_path: '/metrics'
+        static_configs:
+          - targets: ['spp-otel-gateway-collector-monitoring:8888']
+
+      - job_name: 'otel-collector-exporter-8889'
+        # How frequently to scrap the data from this End-Point
+        scrape_interval: 5s
+        # Opentelemetry Collector Metrics Path
+        metrics_path: '/metrics'
+        static_configs:
+          - targets: ['spp-otel-gateway-collector-monitoring-exporter:8889']
+
+      # - job_name: 'actuator-frontend-metrics'
+      #   scrape_interval: 5s
+      #   metrics_path: '/sppfrontend/actuator/prometheus'
+      #   static_configs:
+      #     - targets: [ 'frontend-app-service.monitoring-ns.svc.cluster.local:7070' ]
+      #       labels:
+      #         application: "FrontendApp"
+    
+      # - job_name: 'actuator-backend-metrics'
+      #   scrape_interval: 5s
+      #   metrics_path: '/sppbackend/actuator/prometheus'
+      #   static_configs:
+      #     - targets: [ 'backend-app-service.monitoring-ns.svc.cluster.local:7071' ]
+      #       labels:
+      #         application: "BackendApp"
+
+      # - job_name: 'hotrod-metrics'
+      #   scrape_interval: 5s
+      #   metrics_path: '/metrics'
+      #   static_configs:
+      #     - targets: [ 'jaeger-hotrod-svc.monitoring-ns.svc.cluster.local:8080' ]
+      #       labels:
+      #         application: "BackendApp"              
+  
+---
+apiVersion: apps/v1 
+kind: Deployment 
+metadata:
+  name:  prometheus-deployment
+  namespace: monitoring-ns
+  labels:
+    app: prom-deploy
+    application.owner: spp.com
+    version: v1 
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prom-deploy
+      application.owner: spp.com
+      version: v1
+  strategy:     
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: prom-deploy
+        application.owner: spp.com
+        version: v1
+    spec: 
+      volumes: 
+        - name: prometheus-cm-vol
+          configMap: 
+            name: prometheus-cm
+      containers:
+        - name: prometheus-container
+          image: prom/prometheus:v2.54.1
+          args: 
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--enable-feature=exemplar-storage"
+          imagePullPolicy: IfNotPresent 
+          ports: 
+            - name: prom-ui-port
+              protocol: TCP 
+              containerPort: 9090
+          volumeMounts:
+            - name:  prometheus-cm-vol
+              mountPath:  /etc/prometheus
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "1024Mi"  
+
+---
+apiVersion: v1 
+kind: Service 
+metadata:
+  name: prom-ui-svc
+  namespace: monitoring-ns
+  labels:
+    app: prom-ui-svc
+    application.owner: spp.com
+    version: v1
+spec:
+  type: NodePort 
+  ports:
+    - name: prom-ui-port
+      protocol: TCP 
+      port: 9090 
+      targetPort: 9090
+      nodePort: 30011
+
+  selector: 
+    app: prom-deploy
+    application.owner: spp.com
+    version: v1
+
+           
+
+

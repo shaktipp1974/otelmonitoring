@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: otel-col-ns
+  labels:
+    app: opentelemetery-collector-namespace

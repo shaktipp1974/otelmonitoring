@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jaeger-hotrod
+  namespace: spp-ns
+  labels:
+    app: jaeger-hotrod-sa
+    application.owner: spp.com
+    version: v1
+automountServiceAccountToken: false

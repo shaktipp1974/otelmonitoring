@@ -1,0 +1,65 @@
+# kubectl -n spp-ns get instrumentation.opentelemetry.io
+
+---
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation 
+metadata:
+  name: java-instrumentation
+  namespace: spp-ns 
+spec:
+  env:
+    - name: OTEL_TRACES_EXPORTER
+      value: "otlp"
+      #value: "otlp,logging"
+
+    - name: OTEL_METRICS_EXPORTER
+      value: "otlp,prometheus"
+
+    - name: OTEL_LOGS_EXPORTER
+      value: "otlp"
+
+    - name: OTEL_EXPORTER_OTLP_INSECURE
+      value: "true"
+
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4317"
+
+    # - name: OTEL_EXPORTER_OTLP_HTTP_LOGS_ENDPOINT
+    #   value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4318/v1/logs"
+
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "grpc"
+
+    - name: OTEL_EXPORTER_OTLP_TIMEOUT
+      value: "300"
+
+    - name: OTEL_EXPORTER_JAEGER_ENDPOINT
+      value: "http://jaeger-service.otel-col-ns.svc.cluster.local:4318"
+
+    - name: OTEL_TRACES_SAMPLER
+      value: parentbased_traceidratio
+
+    - name: OTEL_TRACES_SAMPLER_ARG
+      value: "0.85"
+
+  exporter:
+    endpoint: http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4317
+
+  propagators:
+    - jaeger
+    - b3
+    - tracecontext
+    - baggage
+
+  sampler:
+    #type: always_on
+    type: parentbased_traceidratio
+    argument: "1"    #0.25
+
+  java:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.14.0
+    env:
+      - name: OTEL_JAVAAGENT_DEBUG
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_JDBC_ENABLED
+        value: "false"

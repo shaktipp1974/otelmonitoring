@@ -1,0 +1,140 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger-deployment
+  namespace: monitoring-ns
+  labels:
+    app: jaeger-deploy 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger-deploy   
+  strategy:     
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: jaeger-deploy   
+    spec:
+      containers:
+        - name: jaeger-container
+          image: jaegertracing/all-in-one:1.68.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: udp-port
+              protocol: UDP
+              containerPort: 6831 # accept jaeger.thrift over compact thrift protocol
+            - name: udp-binary-port
+              protocol: UDP
+              containerPort: 6832 # accept jaeger.thrift over binary thrift protocol
+            - name: agent-port
+              protocol: TCP
+              containerPort: 14250 # used by jaeger-agent to send spans in model.proto format(Protocol: gRPC)
+            - name: send-span-port
+              protocol: TCP
+              containerPort: 14267 # used by jaeger-agent to send spans in model.proto format(Protocol: gRPC)
+            - name: span-port
+              protocol: TCP
+              containerPort: 14268 # can accept spans directly from clients in jaeger.thrift format over binary thrift protocol
+            - name: monitoring-port
+              protocol: TCP
+              containerPort: 14269 # all-in-one monitoring port
+            - name: grpc-port
+              protocol: TCP
+              containerPort: 16685 # Protobuf/gRPC QueryService
+            - name: jaeger-ui-port
+              protocol: TCP
+              containerPort: 16686 # Jaeger Server query frontend or Jaeger UI for Query
+            - name: otlp-grpc
+              protocol: TCP
+              containerPort: 4317 
+            - name: otlp-http
+              protocol: TCP
+              containerPort: 4318
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "2048Mi"  
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  jaeger-service
+  namespace: monitoring-ns
+  labels:
+    app: jaeger-svc  
+spec:
+  type: ClusterIP
+  selector:
+    app: jaeger-deploy       
+  ports:
+    - name: udp-port
+      protocol: UDP
+      port: 6831 
+      targetPort: 6831
+    - name: udp-binary-port
+      protocol: UDP
+      port: 6832 
+      targetPort: 6832
+    - name: agent-port
+      protocol: TCP
+      port: 14250 
+      targetPort: 14250
+    - name: send-span-port
+      protocol: TCP
+      port: 14267 
+      targetPort: 14267
+    - name: span-port  #accept-span-port
+      protocol: TCP
+      port: 14268 # can accept spans directly from clients in jaeger.thrift format over binary thrift protocol
+      targetPort: 14268
+    - name: monitoring-port
+      protocol: TCP
+      port: 14269 # all-in-one monitoring port
+      targetPort: 14269
+    - name: grpc-port
+      protocol: TCP
+      port: 16685 # Protobuf/gRPC QueryService
+      targetPort: 16685
+    - name: jaeger-ui-port
+      protocol: TCP
+      port: 16686 # Jaeger Server query frontend or Jaeger UI for Query
+      targetPort: 16686
+    - name: otlp-grpc
+      protocol: TCP
+      port: 4317 
+      targetPort: 4317
+    - name: otlp-http
+      protocol: TCP
+      port: 4318
+      targetPort: 4318
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  jaeger-ui-service
+  namespace: monitoring-ns
+  labels:
+    app: jaeger-ui-svc     
+spec:
+  type: NodePort
+  selector:
+    app: jaeger-deploy      
+  ports:
+    - name: jaeger-ui-port
+      protocol: TCP
+      port: 16686 # Jaeger Server query frontend or Jaeger UI for Query
+      targetPort: 16686
+      nodePort: 30010
+
+

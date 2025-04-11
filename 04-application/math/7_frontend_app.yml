@@ -1,0 +1,114 @@
+---
+apiVersion: apps/v1 
+kind: Deployment 
+metadata:
+  name: frontend-app-deployment
+  namespace: spp-ns
+  labels:
+    app: frontend-app-deploy
+    application.owner: spp.com
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-app-deploy
+      application.owner: spp.com
+      version: v1
+  strategy:     
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: frontend-app-deploy
+        application.owner: spp.com
+        version: v1
+      annotations:
+        #sidecar.opentelemetry.io/inject: "spp-collector-gateway"
+        #instrumentation.opentelemetry.io/inject-java: "true"
+        instrumentation.opentelemetry.io/inject-java: "spp-ns/java-instrumentation"
+    spec:
+      containers:
+        - name: frontend-app-container
+          image: shaktipp/otel_auto_inst_frontend_image:latest
+          imagePullPolicy: Never
+          ports:
+            - name: frontend-port
+              containerPort: 7070
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /sppfrontend/health
+              port: 7070
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 180
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /sppfrontend/health
+              port: 7070
+              scheme: HTTP
+            initialDelaySeconds: 45
+            periodSeconds: 180
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "2"
+              memory: "2048Mi" 
+          env:
+            - name: LOKI_HOSTNAME
+              value: "loki-service.spp-ns.svc.cluster.local"
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+              value: "grpc"
+            - name: OTEL_METRICS_EXPORTER
+              value: "otlp"
+            - name: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+              value: "grpc"
+            - name: OTEL_LOGS_EXPORTER
+              value: "otlp"
+            - name: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+              value: "grpc"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://spp-otel-gateway-collector.spp-ns.svc.cluster.local:4317"
+            # - name: COLLECTOR_SERVICE_HOST
+            #   value: spp-otel-gateway-collector.spp-ns.svc.cluster.local
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: "true"           
+            - name: BACKEND_HOST
+              value: backend-app-service.spp-ns.svc.cluster.local         
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-app-service
+  namespace: spp-ns
+  labels:
+    app: frontend-app-svc
+    application.owner: spp.com
+    version: v1
+spec:
+  type: NodePort
+  ports:
+    - name: http-metrics
+      port: 7070
+      protocol: TCP
+      targetPort: 7070
+      nodePort: 30020
+  selector:
+    app: frontend-app-deploy
+    application.owner: spp.com
+    version: v1

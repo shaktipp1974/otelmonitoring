@@ -1,0 +1,64 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger-hotrod
+  namespace: spp-ns
+  labels:
+    app: jaeger-hotrod-deploy
+    application.owner: spp.com
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger-hotrod-deploy
+      application.owner: spp.com
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: jaeger-hotrod-deploy
+        application.owner: spp.com
+        version: v1
+      annotations:       
+        instrumentation.opentelemetry.io/inject-java: "spp-ns/java-instrumentation"
+    spec:
+      securityContext:
+        {}
+      serviceAccountName: jaeger-hotrod
+        
+      containers:
+        - name: jaeger-hotrod
+          securityContext:
+            {}
+          image: jaegertracing/example-hotrod:1.53.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - all
+          env:
+            # - name: JAEGER_AGENT_HOST
+            #   value: jaeger-service.spp-ns.svc.cluster.local
+            # - name: JAEGER_AGENT_PORT
+            #   value: "4318"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://jaeger-service.spp-ns.svc.cluster.local:4318
+          ports:
+            - name: http-port
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080          
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
+            limits:
+              cpu: "2"
+              memory: "2048Mi" 
