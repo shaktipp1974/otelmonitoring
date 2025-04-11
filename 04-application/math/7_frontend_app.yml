@@ -29,7 +29,7 @@ spec:
       annotations:
         #sidecar.opentelemetry.io/inject: "spp-collector-gateway"
         #instrumentation.opentelemetry.io/inject-java: "true"
-        instrumentation.opentelemetry.io/inject-java: "spp-ns/java-instrumentation"
+        instrumentation.opentelemetry.io/inject-java: "otel-col-ns/java-instrumentation"
     spec:
       containers:
         - name: frontend-app-container
@@ -81,9 +81,9 @@ spec:
             - name: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
               value: "grpc"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://spp-otel-gateway-collector.spp-ns.svc.cluster.local:4317"
+              value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4317"
             # - name: COLLECTOR_SERVICE_HOST
-            #   value: spp-otel-gateway-collector.spp-ns.svc.cluster.local
+            #   value: spp-otel-gateway-collector.otel-col-ns.svc.cluster.local
             - name: OTEL_EXPORTER_OTLP_INSECURE
               value: "true"           
             - name: BACKEND_HOST
