@@ -12,7 +12,7 @@ kind: Namespace
 metadata:
   name: otel-col-ns
   labels:
-    app: math-app 
+    app: otel-collector
     
  
 --- 
@@ -109,18 +109,17 @@ spec:
         timeout: 5s
 
       memory_limiter:
-        # 80% of maximum memory up to 2GB
-        limit_mib: 1500
-        # 25% of limit up to 2GB
-        spike_limit_mib: 512
         check_interval: 5s
+        limit_percentage: 75
+        spike_limit_percentage: 15        
 
 
     exporters:
 
-      logging:
-        #loglevel: debug
-        loglevel: info
+      debug:
+        verbosity: detailed
+        sampling_initial: 5
+        sampling_thereafter: 200        
 
       # otlp:
       #   endpoint: otelColContrib:4317
@@ -154,17 +153,17 @@ spec:
         traces:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [logging, otlp/jaeger]
+          exporters: [debug, otlp/jaeger]
 
         metrics:
           receivers: [otlp]
           #receivers: [otlp, prometheus]
           processors: [memory_limiter, batch]          
-          exporters: [logging, prometheus]
+          exporters: [debug, prometheus]
 
-        logs:
-          receivers: [otlp]
-          processors: [batch]
-          exporters: [logging]
-          #exporters: [logging, file]
+        # logs:
+        #   receivers: [otlp]
+        #   processors: [batch]
+        #   exporters: [logging]
+        #   #exporters: [debug, file]
           
