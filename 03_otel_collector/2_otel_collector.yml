@@ -133,8 +133,8 @@ spec:
 
       prometheus:
         enable_open_metrics: true
-        #endpoint: 0.0.0.0:8889
-        endpoint: 0.0.0.0:9090
+        endpoint: 0.0.0.0:8889
+        #endpoint: 0.0.0.0:9090
         send_timestamps: true # Prometheus scrap Timestamp. Not recommended as report needs source timestamp
         metric_expiration: 180m
         const_labels:
