@@ -1,11 +1,11 @@
-# kubectl -n spp-ns get instrumentation.opentelemetry.io
+# kubectl -n otel-col-ns get instrumentation.opentelemetry.io
 
 ---
 apiVersion: opentelemetry.io/v1alpha1
 kind: Instrumentation 
 metadata:
   name: java-instrumentation
-  namespace: spp-ns 
+  namespace: otel-col-ns 
 spec:
   env:
     - name: OTEL_TRACES_EXPORTER
