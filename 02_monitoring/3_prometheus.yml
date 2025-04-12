@@ -112,7 +112,7 @@ data:
         # Opentelemetry Collector Metrics Path
         metrics_path: '/metrics'
         static_configs:
-          - targets: ['spp-otel-gateway-collector-monitoring.otel-col-ns.svc.cluster.local:8889']
+          - targets: ['spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:8889']
 
       # - job_name: 'actuator-frontend-metrics'
       #   scrape_interval: 5s
