@@ -96,8 +96,7 @@ data:
         static_configs:
           - targets : ['localhost:9090'] # Prometheus Server Port
 
-      # Details to connect prometheus with Spring Boot Actuator end-point to scrap the data
-      # The Job Name is added as a label 'job=<job_name>' to any time series scraped from this Config
+      # Details to connect prometheus with Spring Boot Actuator end-point to scrap the data     
       - job_name: 'otel-collector-receiver-8888'
         # How frequently to scrap the data from this End-Point
         scrape_interval: 5s
@@ -106,8 +105,7 @@ data:
         static_configs:
           - targets: ['spp-otel-gateway-collector-monitoring.otel-col-ns.svc.cluster.local:8888']
 
-      - job_name: 'otel-collector-exporter-8889'
-        # How frequently to scrap the data from this End-Point
+      - job_name: 'otel-collector-exporter-8889'        
         scrape_interval: 5s
         # Opentelemetry Collector Metrics Path
         metrics_path: '/metrics'

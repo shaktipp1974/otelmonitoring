@@ -11,14 +11,16 @@ metadata:
 spec:
   env:
     - name: OTEL_TRACES_EXPORTER
-      value: "otlp"
+      value: "otlp" 
       #value: "otlp,logging"
-
     - name: OTEL_METRICS_EXPORTER
-      value: "otlp,prometheus"
-
+      value: "otlp"
+      #value: "otlp,prometheus"
     - name: OTEL_LOGS_EXPORTER
       value: "otlp"
+
+    - name: OTEL_EXPORTER_OTLP_PROTOCOL
+      value: "grpc"
 
     - name: OTEL_EXPORTER_OTLP_INSECURE
       value: "true"
@@ -26,11 +28,14 @@ spec:
     - name: OTEL_EXPORTER_OTLP_ENDPOINT
       value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4317"
 
+    - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+      value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4317"
+      #value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4318"
+
     # - name: OTEL_EXPORTER_OTLP_HTTP_LOGS_ENDPOINT
     #   value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4318/v1/logs"
 
-    - name: OTEL_EXPORTER_OTLP_ENDPOINT
-      value: "grpc"
+
 
     - name: OTEL_EXPORTER_OTLP_TIMEOUT
       value: "300"
@@ -47,11 +52,10 @@ spec:
   exporter:
     endpoint: http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4317
 
-  propagators:
-    - jaeger
-    - b3
+  propagators:       
     - tracecontext
-    - baggage
+    # - baggage
+    # - jaeger
 
   sampler:
     #type: always_on

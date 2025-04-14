@@ -36,19 +36,19 @@ spec:
   replicas: 1
   image: otel/opentelemetry-collector-contrib:0.121.0
   imagePullPolicy: IfNotPresent
-  ports:
-    - name: grpc-port
-      protocol: TCP
-      port: 4317
-    - name: http-port
-      protocol: TCP
-      port: 4318
-    - name: met-rec-port
-      protocol: TCP
-      port: 8888
-    - name: met-exp-port
-      protocol: TCP
-      port: 8889
+  # ports:
+  #   - name: grpc-port
+  #     protocol: TCP
+  #     port: 4317
+  #   - name: http-port
+  #     protocol: TCP
+  #     port: 4318
+  #   - name: met-rec-port
+  #     protocol: TCP
+  #     port: 8888
+  #   - name: met-exp-port
+  #     protocol: TCP
+  #     port: 8889
 
 
   config: |
@@ -133,8 +133,7 @@ spec:
 
       prometheus:
         enable_open_metrics: true
-        endpoint: 0.0.0.0:8889
-        #endpoint: 0.0.0.0:9090
+        endpoint: 0.0.0.0:8889             
         send_timestamps: true # Prometheus scrap Timestamp. Not recommended as report needs source timestamp
         metric_expiration: 180m
         const_labels:

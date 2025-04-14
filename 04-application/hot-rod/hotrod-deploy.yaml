@@ -21,18 +21,19 @@ spec:
         app: jaeger-hotrod-deploy
         application.owner: spp.com
         version: v1
-      annotations:       
-        instrumentation.opentelemetry.io/inject-java: "spp-ns/java-instrumentation"
+      # This application does not support auto instrumentation
+      # annotations:       
+      #   instrumentation.opentelemetry.io/inject-java: "otel-col-ns/java-instrumentation"
     spec:
       securityContext:
         {}
       serviceAccountName: jaeger-hotrod
         
       containers:
-        - name: jaeger-hotrod
+        - name: jaegertracing-hotrod
           securityContext:
             {}
-          image: jaegertracing/example-hotrod:1.53.0
+          image: jaegertracing/example-hotrod:1.68.0
           imagePullPolicy: IfNotPresent
           args:
             - all
@@ -42,7 +43,11 @@ spec:
             # - name: JAEGER_AGENT_PORT
             #   value: "4318"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://jaeger-service.spp-ns.svc.cluster.local:4318
+              value: http://jaeger-service.monitoring-ns.svc.cluster.local:4318
+            # - name: MANAGEMENT_OTLP_METRICS_EXPORT_URL
+            #   value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4318/v1/metrics"
+            # - name: MANAGEMENT_METRICS_ENABLE_EXEMPLARS
+            #   value: "true"
           ports:
             - name: http-port
               containerPort: 8080
@@ -57,8 +62,8 @@ spec:
               port: 8080          
           resources:
             requests:
-              cpu: "250m"
-              memory: "128Mi"
+              cpu: "125m"
+              memory: "32Mi"
             limits:
               cpu: "2"
               memory: "2048Mi" 

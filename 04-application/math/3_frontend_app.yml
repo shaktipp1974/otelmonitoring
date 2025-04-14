@@ -66,28 +66,38 @@ spec:
               cpu: "2"
               memory: "2048Mi" 
           env:
-            - name: LOKI_HOSTNAME
-              value: "loki-service.spp-ns.svc.cluster.local"
-            - name: OTEL_TRACES_EXPORTER
-              value: "otlp"
-            - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
-              value: "grpc"
-            - name: OTEL_METRICS_EXPORTER
-              value: "otlp"
-            - name: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
-              value: "grpc"
-            - name: OTEL_LOGS_EXPORTER
-              value: "otlp"
-            - name: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
-              value: "grpc"
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4317"
+            # - name: LOKI_HOSTNAME
+            #   value: "loki-service.spp-ns.svc.cluster.local"
+            # - name: OTEL_TRACES_EXPORTER
+            #   value: "otlp"
+            # - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+            #   value: "grpc"
+            # - name: OTEL_METRICS_EXPORTER
+            #   value: "otlp"
+            # - name: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+            #   value: "grpc"
+            # - name: OTEL_LOGS_EXPORTER
+            #   value: "otlp"
+            # - name: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+            #   value: "grpc"
+            # - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            #   value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4317"
             # - name: COLLECTOR_SERVICE_HOST
             #   value: spp-otel-gateway-collector.otel-col-ns.svc.cluster.local
-            - name: OTEL_EXPORTER_OTLP_INSECURE
-              value: "true"           
+            # - name: OTEL_EXPORTER_OTLP_INSECURE
+            #   value: "true"           
             - name: BACKEND_HOST
-              value: backend-app-service.spp-ns.svc.cluster.local         
+              value: backend-app-service.spp-ns.svc.cluster.local  
+            # - name: MANAGEMENT_METRICS_EXPORT_OTLP_ENABLED
+            #   value: "true"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_URL
+              value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4318/v1/metrics"
+              #value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4317"  
+            # Enable exemplars (converts -Dsystem.property to ENV format)
+            - name: MANAGEMENT_METRICS_ENABLE_EXEMPLARS
+              value: "true"
+            # - name: MANAGEMENT_METRICS_DISTRIBUTION_PERCENTILES
+            #   value: "0.5,0.95"     
 
 
 ---
