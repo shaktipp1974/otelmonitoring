@@ -38,12 +38,10 @@ spec:
           args:
             - all
           env:
-            # - name: JAEGER_AGENT_HOST
-            #   value: jaeger-service.spp-ns.svc.cluster.local
-            # - name: JAEGER_AGENT_PORT
-            #   value: "4318"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://jaeger-service.monitoring-ns.svc.cluster.local:4318
+
+            # Does not support opentelemetry so following is not applicable
             # - name: MANAGEMENT_OTLP_METRICS_EXPORT_URL
             #   value: "http://spp-otel-gateway-collector.otel-col-ns.svc.cluster.local:4318/v1/metrics"
             # - name: MANAGEMENT_METRICS_ENABLE_EXEMPLARS
